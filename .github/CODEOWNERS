@@ -3,6 +3,8 @@
 # Listing projects/** below would override the Deputy workflow — don't.
 
 /.github/                @DuaneNielsen
+/.claude/                @DuaneNielsen
 /docs/                   @DuaneNielsen
 /README.md               @DuaneNielsen
+/CLAUDE.md               @DuaneNielsen
 /CODEOWNERS              @DuaneNielsen

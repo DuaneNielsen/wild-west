@@ -1,3 +1,26 @@
+```
+                       *** Welcome to the ***
+
+              __      ___ _    _ __      __        _
+              \ \    / (_) |__| |\ \    / /__  ___| |_
+               \ \/\/ /| | / _` | \ \/\/ / -_)(_-<|  _|
+                \_/\_/ |_|_\__,_|  \_/\_/\___|/__/ \__|
+
+
+                          ,------.
+                         ( oOoOo  )___________________
+                          `------'                    \
+                                 \____________________|
+                                    |    /
+                                    |   /
+                                    |__/
+
+
+                       OWNERS govern. The Deputy enforces.
+                  Push fat files - the Sheriff turns you around.
+                  Sit idle too long - the Reaper takes the land.
+```
+
 # wild-west
 
 A collaborative monorepo that maximizes developer autonomy while keeping the

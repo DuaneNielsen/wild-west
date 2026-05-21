@@ -33,8 +33,9 @@ jobs:
           git fetch origin "$BASE_SHA" --depth=1 || true
           mapfile -t CHANGED < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
 
-          # Allow only projects/, .github/, docs/, and the root README.
-          ALLOWED_RE='^(projects/|\.github/|docs/|README\.md$)'
+          # Allow only projects/, repo plumbing (.github, .claude), docs, and
+          # root-level CLAUDE.md + README.md.
+          ALLOWED_RE='^(projects/|\.github/|\.claude/|docs/|CLAUDE\.md$|README\.md$)'
           for f in "${CHANGED[@]}"; do
             [[ -z "$f" ]] && continue
             if [[ ! "$f" =~ $ALLOWED_RE ]]; then
