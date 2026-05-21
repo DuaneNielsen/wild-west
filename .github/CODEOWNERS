@@ -1,0 +1,8 @@
+# CODEOWNERS locks down the repo perimeter. Anything under projects/ is
+# governed by the OWNERS files inside each project folder, NOT here.
+# Listing projects/** below would override the Deputy workflow — don't.
+
+/.github/                @DuaneNielsen
+/docs/                   @DuaneNielsen
+/README.md               @DuaneNielsen
+/CODEOWNERS              @DuaneNielsen

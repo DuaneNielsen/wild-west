@@ -1,0 +1,16 @@
+# OWNERS - The Land Deed for this project.
+# Declares stewardship and the stability contract this project offers.
+
+owners:
+  - DuaneNielsen
+
+contract: "Move Fast and Break"
+# Valid contracts:
+#   "At Your Own Risk"     - Experimental sandbox. May break or vanish.
+#                            Reaped after 180 days idle.
+#   "Move Fast and Break"  - Active development. APIs change rapidly.
+#                            No backward-compat promises, but the land is yours.
+#   "Ironclad Guarantee"   - Production-grade. Backward-compatible.
+#                            Breaking changes require advance notice.
+
+description: "Example project demonstrating the OWNERS file format."

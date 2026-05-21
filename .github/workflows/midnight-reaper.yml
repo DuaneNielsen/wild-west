@@ -1,0 +1,158 @@
+name: Midnight Reaper
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prune-stale-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prune branches idle > 30 days and not merged
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          PROTECTED_RE='^(main|master|develop|staging|release/.*|hotfix/.*|support/.*)$'
+          STALE_DAYS=30
+          CUTOFF=$(( $(date +%s) - STALE_DAYS * 86400 ))
+
+          git fetch --prune origin
+
+          git for-each-ref \
+              --format='%(refname:short)|%(committerdate:unix)' \
+              refs/remotes/origin \
+            | while IFS='|' read -r ref ts; do
+              br="${ref#origin/}"
+              [[ "$br" == "HEAD" || "$br" == "$DEFAULT_BRANCH" ]] && continue
+              [[ "$br" =~ $PROTECTED_RE ]] && continue
+              [[ -z "$ts" || "$ts" -ge "$CUTOFF" ]] && continue
+
+              if git merge-base --is-ancestor "$ref" "origin/$DEFAULT_BRANCH" 2>/dev/null; then
+                echo "skip merged:  $br"
+                continue
+              fi
+
+              open_pr=$(gh pr list --repo "$REPO" --head "$br" --state open --json number --jq 'length')
+              if [[ "$open_pr" -gt 0 ]]; then
+                echo "skip open-PR: $br"
+                continue
+              fi
+
+              echo "DELETE stale: $br (idle since $(date -u -d @"$ts" -Iseconds))"
+              git push origin --delete "$br" || echo "  (already gone)"
+            done
+
+  reclaim-abandoned-projects:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "midnight-reaper[bot]"
+          git config user.email "midnight-reaper@users.noreply.github.com"
+
+      - name: Reclaim At Your Own Risk projects idle > 180 days
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          ABANDON_DAYS=180
+          NOW=$(date +%s)
+          CUTOFF=$(( NOW - ABANDON_DAYS * 86400 ))
+
+          parse_owners() {
+            awk '
+              /^owners:/ { in_owners=1; next }
+              /^[A-Za-z_][A-Za-z0-9_]*:/ { in_owners=0 }
+              in_owners && /^[[:space:]]*-[[:space:]]*/ {
+                gsub(/^[[:space:]]*-[[:space:]]*"?@?/, "")
+                gsub(/"?[[:space:]]*$/, "")
+                if (length) print
+              }
+            ' "$1"
+          }
+          parse_contract() {
+            awk -F'"' '
+              /^contract:/ {
+                if (NF >= 2) { print $2; exit }
+                sub(/^contract:[[:space:]]*/, "", $0)
+                print $0
+                exit
+              }
+            ' "$1"
+          }
+
+          reclaimed_rows=()
+          shopt -s nullglob
+          for owners_file in projects/*/OWNERS; do
+            proj_dir=$(dirname "$owners_file")
+            proj_name=$(basename "$proj_dir")
+
+            contract=$(parse_contract "$owners_file")
+            [[ "$contract" == "At Your Own Risk" ]] || continue
+
+            last_ts=$(git log -1 --format=%ct -- "$proj_dir" 2>/dev/null || echo 0)
+            [[ "$last_ts" -gt 0 && "$last_ts" -lt "$CUTOFF" ]] || continue
+
+            mapfile -t OWNERS < <(parse_owners "$owners_file")
+            mentions=""
+            for o in "${OWNERS[@]}"; do mentions+="@$o "; done
+
+            age_days=$(( (NOW - last_ts) / 86400 ))
+            reclaimed_rows+=("| \`$proj_name\` | $age_days | ${mentions% } |")
+            git rm -rf "$proj_dir"
+            echo "RECLAIM $proj_dir (age ${age_days}d, owners: ${OWNERS[*]})"
+          done
+
+          if [[ ${#reclaimed_rows[@]} -eq 0 ]]; then
+            echo "Nothing to reclaim tonight."
+            exit 0
+          fi
+
+          branch="reaper/reclaim-$(date -u +%Y%m%d)"
+          git checkout -b "$branch"
+          git commit -m "reaper: reclaim abandoned At Your Own Risk projects"
+          git push -u origin "$branch"
+
+          {
+            echo "## The Reaper reclaims the land"
+            echo ""
+            echo "These projects carry an **\`At Your Own Risk\`** contract and have had **zero commits in 180+ days**. Per the charter, the land is reclaimed."
+            echo ""
+            echo "| Project | Days Idle | Original Owners |"
+            echo "|---|---|---|"
+            printf '%s\n' "${reclaimed_rows[@]}"
+            echo ""
+            echo "### Was this a mistake?"
+            echo "- Close this PR. The files remain in git history and can be restored with \`git revert <merge-sha>\`."
+            echo "- If you want to keep the project, push a commit that upgrades the contract to \`Move Fast and Break\` or \`Ironclad Guarantee\` so the Reaper does not return."
+            echo ""
+            echo "_Opened automatically by \`.github/workflows/midnight-reaper.yml\`._"
+          } > /tmp/pr-body.md
+
+          gh pr create \
+            --repo "$REPO" \
+            --base "$DEFAULT_BRANCH" \
+            --head "$branch" \
+            --title "Reaper: reclaim abandoned projects ($(date -u +%Y-%m-%d))" \
+            --body-file /tmp/pr-body.md

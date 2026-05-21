@@ -1,0 +1,129 @@
+name: Project Guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: project-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Resolve modified projects and reject root edits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$BASE_SHA" --depth=1 || true
+          mapfile -t CHANGED < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+
+          # Allow only projects/, .github/, docs/, and the root README.
+          ALLOWED_RE='^(projects/|\.github/|docs/|README\.md$)'
+          for f in "${CHANGED[@]}"; do
+            [[ -z "$f" ]] && continue
+            if [[ ! "$f" =~ $ALLOWED_RE ]]; then
+              echo "::error file=$f::Root edits are locked. Move work under projects/<your-project>/."
+              exit 1
+            fi
+          done
+
+          : > /tmp/projects.txt
+          declare -A SEEN
+          for f in "${CHANGED[@]}"; do
+            if [[ "$f" =~ ^projects/([^/]+)/ ]]; then
+              p="${BASH_REMATCH[1]}"
+              if [[ -z "${SEEN[$p]:-}" ]]; then
+                SEEN[$p]=1
+                echo "$p" >> /tmp/projects.txt
+              fi
+            fi
+          done
+          echo "Touched projects:"
+          cat /tmp/projects.txt || echo "  (none)"
+
+      - name: Enforce ownership and approval
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! -s /tmp/projects.txt ]]; then
+            echo "No project changes - passing."
+            exit 0
+          fi
+
+          mapfile -t APPROVERS < <(
+            gh api "repos/$REPO/pulls/$PR_NUMBER/reviews" --paginate \
+              --jq '[.[] | select(.state == "APPROVED") | .user.login] | unique | .[]'
+          )
+          echo "Approvers: ${APPROVERS[*]:-<none>}"
+
+          parse_owners() {
+            awk '
+              /^owners:/ { in_owners=1; next }
+              /^[A-Za-z_][A-Za-z0-9_]*:/ { in_owners=0 }
+              in_owners && /^[[:space:]]*-[[:space:]]*/ {
+                gsub(/^[[:space:]]*-[[:space:]]*"?@?/, "")
+                gsub(/"?[[:space:]]*$/, "")
+                if (length) print
+              }
+            ' "$1"
+          }
+
+          FAIL=0
+          while IFS= read -r proj; do
+            [[ -z "$proj" ]] && continue
+            owners_file="projects/$proj/OWNERS"
+
+            if [[ ! -f "$owners_file" ]]; then
+              echo "PASS  $proj  (new project, no OWNERS yet - homesteader rule)"
+              continue
+            fi
+
+            mapfile -t OWNERS < <(parse_owners "$owners_file")
+            if [[ ${#OWNERS[@]} -eq 0 ]]; then
+              echo "::error file=$owners_file::OWNERS file has no owners listed."
+              FAIL=1
+              continue
+            fi
+
+            for o in "${OWNERS[@]}"; do
+              if [[ "$o" == "$PR_AUTHOR" ]]; then
+                echo "PASS  $proj  (author @$PR_AUTHOR is an owner)"
+                continue 2
+              fi
+            done
+
+            for o in "${OWNERS[@]}"; do
+              for a in "${APPROVERS[@]:-}"; do
+                if [[ "$o" == "$a" ]]; then
+                  echo "PASS  $proj  (owner @$o approved)"
+                  continue 3
+                fi
+              done
+            done
+
+            echo "::error::BLOCK $proj - @$PR_AUTHOR is not an owner. Needs APPROVED review from one of: ${OWNERS[*]}"
+            FAIL=1
+          done < /tmp/projects.txt
+
+          exit $FAIL
