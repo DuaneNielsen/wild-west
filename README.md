@@ -33,14 +33,22 @@ f~FTZE$@@@@@@M@~  $@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@$
 # wild-west
 
 A collaborative monorepo that maximizes developer autonomy while keeping the
-repo itself healthy. Four moving parts:
+repo itself healthy. Four moving parts keep the peace:
 
-| Piece | What it does |
-|---|---|
-| **Land Deeds** (`projects/*/OWNERS`) | Each project declares its owners and stability contract. |
-| **The Deputy** (`.github/workflows/project-guard.yml`) | PR gate. Owners self-merge. Non-owners need an OWNERS-list approval. |
-| **The Sheriff** (push ruleset) | Blocks any push containing files larger than 10 MB. Repo-wide. |
-| **The Grim Reaper** (`.github/workflows/midnight-reaper.yml`) | Nightly cleanup. Prunes stale branches; reclaims abandoned `At Your Own Risk` projects. |
+📜 **The Land Deeds** (`projects/*/OWNERS`) — You claim your project folder,
+you decide who works there, and you sign your treaty (`Ironclad Guarantee`,
+`Move Fast and Break`, or `At Your Own Risk`).
+
+🤠 **The Deputy** (`.github/workflows/project-guard.yml`) — Ensures outsiders
+don't mess with your land without your written approval.
+
+🚔 **The Sheriff** (GitHub push ruleset) — Stands at the border and stops
+anyone trying to smuggle 10 MB+ binaries into the repo, keeping the town
+history clean.
+
+💀 **The Grim Reaper** (`.github/workflows/midnight-reaper.yml`) — Comes out
+in the dead of night to burn down abandoned ghost towns (stale
+`At Your Own Risk` projects) and delete stale branches.
 
 ## Conventions
 
