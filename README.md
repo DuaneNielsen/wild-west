@@ -1,33 +1,29 @@
 ```
-                                                            \_   __. y$_r
-                                                       ___R@$g@@@@@@g@@@
-                                                   __yyyZ@@@@@@@@@@@@@@@g_
-                                                ux=ED@@@@@@@@@@@@@@@@@@@@@L
-                                              r==yyag@@@@@@@@@@@@@@@@@@@@@@g_
-                                               `TZZ$@@@@@@@@@@@@@@@@@@@@@@@@@y
-                            __ygg$$ggyy_________a$@@@@@@@@@@@@@@@@F~~~F4@@@@@@$
-                  _ag@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@        `~@@@'
-     ______-wyyag@@@@@@F~@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  _yyaggg@@@@@@@@@@@@7  $@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- ^~~~syZE@@@@@@@@P@@`   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@$
-      `~~ZEC@#F~ =~    J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@$
-                       j@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
-                     _a@@@@@@@@@@@@@~~~P@@@@@@@@@@@@@@@@@@@@@@@gy_
-                  a@@@@@@@F~@@@@@P~       `~~~~~~~~~~~~~R@@@@@@@@@@$y_
-                 a@@@F~~ _a@@@@P~                          ~@@@@~~?@@@y
-                a@F~     @@@@F`                             `R@@$    ~@@y_
-             _y@@~       4@@                                  ~@@@     ~@@g_
-          ygy@@@`         9@L                                   ~@$,    `~$@$_
-          RPF~             @@_                                   `@@y     `~~~
-                           `@@y_                                   R@@y_
-                            ~~@@@,                                   4@@a
+                          Welcome to the
 
-                                  Welcome to the
+           __      ___ _    _ __      __        _
+           \ \    / (_) |__| |\ \    / /__  ___| |_
+            \ \/\/ /| | / _` | \ \/\/ / -_)(_-<|  _|
+             \_/\_/ |_|_\__,_|  \_/\_/\___|/__/ \__|
 
-                __      ___ _    _ __      __        _
-                \ \    / (_) |__| |\ \    / /__  ___| |_
-                 \ \/\/ /| | / _` | \ \/\/ / -_)(_-<|  _|
-                  \_/\_/ |_|_\__,_|  \_/\_/\___|/__/ \__|
+                                              __u_____ gL/
+                                          .-ayZ@@@@@@@@@@_
+                                       _aa@@@@@@@@@@@@@@@@g
+                                     -L_yyg@@@@@@@@@@@@@@@@$_
+                                      C~$@@@@@@@@@@@@@@@@@@@@g
+                ______yg$@@@$ggyyyyyyyg@@@@@@@@@@@@@F``~~?R@@@@
+       _   __a@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@~       `F~'
+  __2E@gg@@@@@@@@`y@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`
+f~FTZE$@@@@@@M@~  $@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@$
+    `~~TR=F~-F    $@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@$
+                 _@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@L
+              yyg@@@@@@@@@@~   ~~FPRRRRRRRPP@@@@@@@$gy_
+             a@@PF~`y@@@@~                   `~@@@@F4@@$
+            a@~    @@@P~                        ~@@L  `~@g_
+          a@P      ~@$                           `R@L    4@g_
+       a@@PF        4@_                            ~@g     R@$
+       ~`            9@_                             @@y
+                      ~@@$                            `9@g
 ```
 
 > OWNERS govern. The Deputy enforces.
@@ -37,14 +33,22 @@
 # wild-west
 
 A collaborative monorepo that maximizes developer autonomy while keeping the
-repo itself healthy. Four moving parts:
+repo itself healthy. Four moving parts keep the peace:
 
-| Piece | What it does |
-|---|---|
-| **Land Deeds** (`projects/*/OWNERS`) | Each project declares its owners and stability contract. |
-| **The Deputy** (`.github/workflows/project-guard.yml`) | PR gate. Owners self-merge. Non-owners need an OWNERS-list approval. |
-| **The Sheriff** (push ruleset) | Blocks any push containing files larger than 10 MB. Repo-wide. _(Not active in this sandbox — see [TODO](#sheriff-not-active) below.)_ |
-| **The Grim Reaper** (`.github/workflows/midnight-reaper.yml`) | Nightly cleanup. Prunes stale branches; reclaims abandoned `At Your Own Risk` projects. |
+📜 **The Land Deeds** (`projects/*/OWNERS`) — You claim your project folder,
+you decide who works there, and you sign your treaty (`Ironclad Guarantee`,
+`Move Fast and Break`, or `At Your Own Risk`).
+
+🤠 **The Deputy** (`.github/workflows/project-guard.yml`) — Ensures outsiders
+don't mess with your land without your written approval.
+
+🚔 **The Sheriff** (GitHub push ruleset) — Stands at the border and stops
+anyone trying to smuggle 10 MB+ binaries into the repo, keeping the town
+history clean. _(Not active in this sandbox — see [TODO](#sheriff-not-active) below.)_
+
+💀 **The Grim Reaper** (`.github/workflows/midnight-reaper.yml`) — Comes out
+in the dead of night to burn down abandoned ghost towns (stale
+`At Your Own Risk` projects) and delete stale branches.
 
 ## Conventions
 
