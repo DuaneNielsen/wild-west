@@ -7,7 +7,7 @@ repo itself healthy. Four moving parts:
 |---|---|
 | **Land Deeds** (`projects/*/OWNERS`) | Each project declares its owners and stability contract. |
 | **The Deputy** (`.github/workflows/project-guard.yml`) | PR gate. Owners self-merge. Non-owners need an OWNERS-list approval. |
-| **The Sheriff** (push ruleset) | Blocks any push containing files larger than 10 MB. Repo-wide. |
+| **The Sheriff** (push ruleset) | Blocks any push containing files larger than 10 MB. Repo-wide. _(Not active in this sandbox — see [TODO](#sheriff-not-active) below.)_ |
 | **The Grim Reaper** (`.github/workflows/midnight-reaper.yml`) | Nightly cleanup. Prunes stale branches; reclaims abandoned `At Your Own Risk` projects. |
 
 ## Conventions
@@ -35,3 +35,26 @@ reasoning behind each one.
 | `At Your Own Risk` | Yes, after 180 days idle | Experimental sandbox. May vanish. |
 | `Move Fast and Break` | No | Active development. APIs change rapidly. |
 | `Ironclad Guarantee` | No | Production. Backward-compatible. |
+
+## Sheriff not active
+
+The Sheriff push ruleset is intentionally absent in this repo. GitHub.com
+push rulesets are only available on org-owned repositories, and this is a
+personal account. When this design is ported to a GitHub Enterprise org (or
+any github.com org), enabling the Sheriff is one API call:
+
+```bash
+gh api -X POST /repos/<ORG>/<repo>/rulesets --input - <<EOF
+{
+  "name": "Sheriff: block oversized files",
+  "target": "push",
+  "enforcement": "active",
+  "rules": [
+    {"type": "max_file_size", "parameters": {"max_file_size": 10}}
+  ]
+}
+EOF
+```
+
+Until then, oversized files are not blocked at push time. Use
+`git filter-repo` or `git lfs migrate` to clean up if any sneak in.

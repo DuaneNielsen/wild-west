@@ -42,6 +42,12 @@ never enter history. The developer's local files are untouched — only the
 push is refused. Standard remediation: rewrite the offending commit
 (`git filter-repo`, `git reset`, `git rm --cached`) and re-push.
 
+> **Status in this sandbox:** the Sheriff is not configured here because
+> github.com personal repos cannot host push rulesets. The design works
+> unchanged on any org-owned repo (free GitHub orgs included), and on
+> GitHub Enterprise Server. See README's "Sheriff not active" section for
+> the one-shot enablement command.
+
 ### 4. The Grim Reaper (nightly cleanup)
 
 `.github/workflows/midnight-reaper.yml` runs at 00:00 UTC daily.
